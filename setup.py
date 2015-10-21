@@ -7,7 +7,7 @@ import tabtosql
 
 
 def _load(filename):
-    """Loads file contents from package base path."""
+    """Load file contents from package base path."""
     base = os.path.dirname(os.path.abspath(__file__))
     loadfile = os.path.join(base, filename)
     with open(loadfile, 'r') as f_in:
@@ -32,7 +32,7 @@ classifiers = [
 
 setup(name=tabtosql.__title__,
       version=tabtosql.__version__,
-      license = tabtosql.__license__,
+      license=tabtosql.__license__,
       description='Simple Tableau SQL Extract Tool',
       long_description=readme,
       author=tabtosql.__author__,
