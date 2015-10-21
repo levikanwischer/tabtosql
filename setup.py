@@ -32,6 +32,7 @@ classifiers = [
 
 setup(name=tabtosql.__title__,
       version=tabtosql.__version__,
+      license = tabtosql.__license__,
       description='Simple Tableau SQL Extract Tool',
       long_description=readme,
       author=tabtosql.__author__,
