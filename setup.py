@@ -30,7 +30,7 @@ classifiers = [
     ]
 
 
-setup(name='tabtosql',
+setup(name=tabtosql.__title__,
       version=tabtosql.__version__,
       description='Simple Tableau SQL Extract Tool',
       long_description=readme,

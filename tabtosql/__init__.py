@@ -2,7 +2,7 @@
 
 """
 Simple Tableau SQL Extract Tool
--------------------------------
+
 tabtosql is a simple command line tool for parsing sql queries & related
 information out of tableau workbooks (.twb & .twbx files). It works by
 taking a tableau workbook, parsing the xml, and writing the information
