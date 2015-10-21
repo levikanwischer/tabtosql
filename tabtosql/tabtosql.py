@@ -26,18 +26,17 @@ SMALL_LINE = 50
 def return_xml(infile):
     """Load twb XML into memory & return root object."""
     if infile.endswith('.twbx'):
-        return _parse_twbx(infile)
+        infile = _parse_twbx(infile)
     return ET.parse(infile).getroot()
 
 
 def _parse_twbx(infile):
-    """Parse twbx zip & return twb XML root object."""
+    """Parse twbx zip & return twb XML object."""
     with open(infile, 'rb') as f_in:
         twbx = zipfile.ZipFile(f_in)
         for item in twbx.namelist():
             if item.endswith('.twb'):
-                twb = twbx.open(item)
-                return ET.parse(twb).getroot()
+                return twbx.open(item)
 
 
 def parse_worksheets(worksheets):
