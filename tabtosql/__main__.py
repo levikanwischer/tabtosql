@@ -1,34 +1,44 @@
 # -*- coding: utf-8 -*-
 
+"""
+Tableau Workbook SQL Extract Tool
+
+tabtosql is a command line tool for parsing sql queries & related
+information out of tableau workbooks (.twb & .twbx files). It works by
+taking a tableau workbook, parsing the xml, and formatting information
+about worksheets, connections to those worksheets, their connection(db)
+details, and the corresponding custom sql (assuming it exists) in a
+valid sql & human readable format.
+
+    USAGE:
+    $ tabtosql input.twb(x) > output.sql
+
+See the README for further details.
+"""
+
+import sys
+
 import click
-from tabtosql import tabtosql
+
+import tabtosql
 
 
 @click.command()
-@click.option('--infile', '-i', prompt=True, help='Input file (.twb(x))')
-@click.option('--outfile', '-o', prompt=True, help='Output file (.sql)')
-def cli(infile, outfile):
-    """
-    Simple Tableau SQL Extract Tool
+@click.argument('filename')
+def cli(filename):
+    """Tableau Workbook SQL Extract Tool
 
-    tabtosql is a simple command line tool for parsing sql queries & related
+    tabtosql is a command line tool for parsing sql queries & related
     information out of tableau workbooks (.twb & .twbx files). It works by
-    taking a tableau workbook, parsing the xml, and writing the information
+    taking a tableau workbook, parsing the xml, and formatting information
     about worksheets, connections to those worksheets, their connection(db)
-    details, and the corresponding custom sql (assuming it exists) to disk.
+    details, and the corresponding custom sql (assuming it exists) in a
+    valid sql & human readable format.
 
-    See the README.txt for further details.
+        USAGE:
+
+            $ tabtosql input.twb(x) > output.sql
+
+    See the README for further details.
     """
-    twb = tabtosql.return_xml(infile)
-
-    worksheets = tabtosql.parse_worksheets(twb.find('worksheets'))
-    datasources = tabtosql.parse_datasources(twb.find('datasources'))
-    sql = tabtosql.parse_queries(twb.find('datasources'))
-
-    output = tabtosql.format_header(infile)
-    output += tabtosql.format_worksheets(worksheets)
-    output += tabtosql.format_datasources(datasources)
-    output += tabtosql.format_queries(sql)
-
-    with open(outfile, 'wb') as f_out:
-        f_out.write(output.encode('utf-8'))
+    sys.stdout.write(tabtosql.convert(filename))
