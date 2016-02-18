@@ -1,43 +1,54 @@
 # -*- coding: utf-8 -*-
 
 """
-tabtosql.tabtosql
+tabtosql.workbook
 -----------------
 
 This module contains logic for parsing tableau workbooks to valid sql.
 
-    USAGE:
-    >>> tabtosql.tabtosql.*
 
-See the README.txt for further details.
+See the README for further details.
 """
 
-import os
-import getpass
-import zipfile
-from datetime import datetime
-import xml.etree.ElementTree as ET
 from collections import OrderedDict
+from datetime import datetime
+import getpass
+import os
+import re
+import xml.etree.ElementTree as ET
+import zipfile
 
 
-BIG_LINE = 77
-SMALL_LINE = 50
+LINE_BIG = 77
+LINE_SMALL = 50
 
 
-def return_xml(infile):
+def return_xml(filename):
     """Load twb XML into memory & return root object."""
-    if infile.endswith('.twbx'):
-        infile = _parse_twbx(infile)
-    return ET.parse(infile).getroot()
+    _validate_file(filename)
+    if filename.endswith('.twbx'):
+        return _parse_twbx(filename)
+    return ET.parse(filename).getroot()
 
 
-def _parse_twbx(infile):
-    """Parse twbx zip & return twb XML object."""
-    with open(infile, 'rb') as f_in:
-        twbx = zipfile.ZipFile(f_in)
+def _validate_file(filename):
+    """Validate given file is acceptable for processing."""
+    # File path must exist
+    if not os.path.isfile(filename):
+        raise OSError('%s is not a valid file path.' % filename)
+    # Must be an approved tableau filetabto
+    if filename.split('.')[-1] not in ('twb', 'twbx'):
+        raise OSError('%s is not a valid tableau file.' % filename)
+
+
+def _parse_twbx(filename):
+    """Parse twbx zip & return twb XML."""
+    with open(filename, 'rb') as infile:
+        twbx = zipfile.ZipFile(infile)
         for item in twbx.namelist():
             if item.endswith('.twb'):
-                return twbx.open(item)
+                twb = twbx.open(item)
+                return ET.parse(twb).getroot()
 
 
 def parse_worksheets(worksheets):
@@ -72,34 +83,36 @@ def parse_queries(datasources):
     datasources = [i for i in datasources if 'caption' in i.attrib]
     for datasource in datasources:
         name = datasource.attrib['caption']
-        query = datasource.find('connection/relation')
-        query = query.text if query.text else '-- LINKED TO: {}'.format(query.attrib['table'])
+        conn = datasource.find('connection/relation')
+        query = conn.text if conn.text else '-- LINKED TO: %s' % conn.attrib['table']
         # Cleans eval operators that are manipulated by tableau for XML
         query = query.replace('<<', '<').replace('>>', '>')
+        # TODO: Should be handling for universal newlines better (ie \r\n)
+        query = re.sub(r'\r\n', r'\n', query)
         results[name] = query
     return results
 
 
-def format_header(infile):
+def format_header(filename):
     """Format header object for outfile."""
-    infile = os.path.abspath(infile)
+    filename = os.path.abspath(filename)
     username = getpass.getuser()
     today = datetime.now().strftime('%Y-%m-%d %I:%M%p')
-    output = '{}\n'.format('-'*BIG_LINE)
-    output += '-- Created by: {}\n'.format(username)
-    output += '-- Created on: {}\n'.format(today)
-    output += '-- Source: {}\n'.format(infile)
-    output += '{}{}'.format('-'*BIG_LINE, '\n'*3)
+    output = '%s\n' % ('-'*LINE_BIG)
+    output += '-- Created by: %s\n' % username
+    output += '-- Created on: %s\n' % today
+    output += '-- Source: %s\n' % filename
+    output += '%s%s' % ('-'*LINE_BIG, '\n'*3)
     return output
 
 
 def format_worksheets(worksheets):
     """Format worksheets object for outfile."""
-    output = '-- Worksheets w/ Datasources {}\n'.format('-'*(BIG_LINE-29))
+    output = '-- Worksheets w/ Datasources %s\n' % ('-'*(LINE_BIG-29))
     for worksheet in worksheets:
-        output += '-- {}\n'.format(worksheet)
+        output += '-- %s\n' % worksheet
         for source in worksheets[worksheet]:
-            output += '  -- {}\n'.format(source)
+            output += '  -- %s\n' % source
         output += '\n'
     output += '\n'*2
     return output
@@ -107,22 +120,37 @@ def format_worksheets(worksheets):
 
 def format_datasources(datasources):
     """Format datasources object for outfile."""
-    output = '-- Datasources & Connections {}\n'.format('-'*(BIG_LINE-29))
+    output = '-- Datasources & Connections %s\n' % ('-'*(LINE_BIG-29))
     for source in datasources:
-        output += '-- {}\n'.format(source)
-        output += '  -- Server: {}\n'.format(datasources[source]['server'])
-        output += '  -- Engine: {}\n'.format(datasources[source]['engine'])
-        output += '  -- Database: {}\n'.format(datasources[source]['db'])
-        output += '  -- Username: {}\n'.format(datasources[source]['user'])
+        output += '-- %s\n' % source
+        output += '  -- Server: %s\n' % datasources[source]['server']
+        output += '  -- Engine: %s\n' % datasources[source]['engine']
+        output += '  -- Database: %s\n' % datasources[source]['db']
+        output += '  -- Username: %s\n' % datasources[source]['user']
         output += '\n'*2
     return output
 
 
 def format_queries(queries):
     """Format datasources object for outfile."""
-    output = '-- Queries {}\n'.format('-'*(BIG_LINE-11))
+    output = '-- Queries %s\n' % ('-'*(LINE_BIG-11))
     for query in queries:
-        output += '-- {} {}\n'.format(query, '-'*(SMALL_LINE-4-len(query)))
+        output += '-- %s %s\n' % (query, '-'*(LINE_SMALL-4-len(query)))
         output += queries[query]
-        output += '\n;{}'.format('\n'*3)
+        output += '\n;%s' % ('\n'*3)
+    return output
+
+
+def convert(filename):
+    """Process tableau to sql conversion."""
+    twb = return_xml(filename)
+
+    worksheets = parse_worksheets(twb.find('worksheets'))
+    datasources = parse_datasources(twb.find('datasources'))
+    sql = parse_queries(twb.find('datasources'))
+
+    output = format_header(filename)
+    output += format_worksheets(worksheets)
+    output += format_datasources(datasources)
+    output += format_queries(sql)
     return output
