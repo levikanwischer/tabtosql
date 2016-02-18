@@ -22,7 +22,7 @@ def read(filename):
         return infile.read()
 
 
-def version(baked='0.0.0.dev1'):
+def version(baked):
     """Extract package version metadata."""
     regex = r'''__version__\s*=\s*['\"]([^'\"]*)['\"]'''
     source = read(os.path.join(NAME, '__init__.py'))
@@ -48,7 +48,7 @@ CLASSIFIERS = ['Development Status :: 5 - Production/Stable',
 
 
 setup(name=NAME,
-      version=version(baked='1.0.0rc1'),
+      version=version(baked='1.0.1'),
       author='Levi Kanwischer',
       author_email='levi@kanwischer.me',
       license='MIT',

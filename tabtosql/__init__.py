@@ -20,7 +20,7 @@ from .workbook import convert
 
 
 __title__ = 'tabtosql'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __author__ = 'Levi Kanwischer'
 __copyright__ = 'Copyright (c) 2016 Levi Kanwischer'
 __license__ = 'MIT'
