@@ -12,6 +12,10 @@
 *Tableau Workbook SQL Extract Tool*
 
 
+.. image:: https://img.shields.io/pypi/v/tabtosql.svg
+    :target: https://pypi.python.org/pypi/tabtosql
+
+
 OVERVIEW
 ''''''''
 tabtosql is a command line tool for parsing sql queries & related
