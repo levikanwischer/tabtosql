@@ -88,8 +88,7 @@ def parse_queries(datasources):
         # Cleans eval operators that are manipulated by tableau for XML
         query = query.replace('<<', '<').replace('>>', '>')
         # TODO: Should be handling for universal newlines better (ie \r\n)
-        query = re.sub(r'\r\n', r'\n', query)
-        results[name] = query
+        results[name] = re.sub(r'\r\n', r'\n', query)
     return results
 
 
