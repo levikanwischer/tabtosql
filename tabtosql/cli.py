@@ -34,7 +34,7 @@ def main(filename):
 
     See the README for further details.
     """
-    sys.stdout.write(tabtosql.convert(filename))
+    sys.stdout.write(convert(filename))
 
 
 if __name__ == '__main__':
