@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
-"""
-Tableau Workbook SQL Extract Tool
+"""tabtosql
 
-tabtosql is a command line tool for parsing sql queries & related
-information out of tableau workbooks (.twb & .twbx files). It works by
-taking a tableau workbook, parsing the xml, and formatting information
-about worksheets, connections to those worksheets, their connection(db)
-details, and the corresponding custom sql (assuming it exists) in a
-valid sql & human readable format.
+Simple Tableau SQL Extract Tool.
 
-    USAGE:
-    $ tabtosql input.twb(x) > output.sql
 
 See the README for further details.
+
 """
 
 from .workbook import convert
 
 
 __title__ = 'tabtosql'
-__version__ = '1.0.3'
+__version__ = '2.0.0.dev1'
+__license__ = 'MIT license'
 __author__ = 'Levi Kanwischer'
-__copyright__ = 'Copyright (c) 2016 Levi Kanwischer'
-__license__ = 'MIT'
-__all__ = ['convert']
+__maintainer__ = 'Levi Kanwischer'
+__email__ = 'levi@kanwischer.me'
+__all__ = [
+    '__title__',
+    '__version__',
+    '__license__',
+    '__email__',
+    'convert',
+]
