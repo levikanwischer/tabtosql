@@ -9,7 +9,7 @@ See the README for further details.
 
 """
 
-from .workbook import convert
+from tabtosql.workbook import convert
 
 
 __title__ = 'tabtosql'
