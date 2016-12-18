@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 
-"""
-tabtosql.workbook
------------------
+"""tabtosql.workbook
 
 This module contains logic for parsing tableau workbooks to valid sql.
 
 
 See the README for further details.
+
 """
 
-from collections import OrderedDict
-from datetime import datetime
 import getpass
 import os
 import re
 import xml.etree.ElementTree as ET
 import zipfile
+from collections import OrderedDict
+from datetime import datetime
 
 
 LINE_BIG = 77
@@ -24,17 +23,44 @@ LINE_SMALL = 50
 
 
 def return_xml(filename):
-    """Load twb XML into memory & return root object."""
+    """Load twb XML into memory & return root object.
+
+    Parameters
+    ----------
+    filename : str
+        Path to Tableau file to convert.
+
+    Returns
+    -------
+    xml : object <ElementTree>
+        Root ET object from initial Tableau file.
+
+    """
     _validate_file(filename)
 
     if filename.endswith('.twbx'):
-        return _parse_twbx(filename)
+        xml = _parse_twbx(filename)
+        return xml
 
-    return ET.parse(filename).getroot()
+    xml = ET.parse(filename).getroot()
+    return xml
 
 
 def _validate_file(filename):
-    """Validate given file is acceptable for processing."""
+    """Validate given file is acceptable for processing.
+
+    Parameters
+    ----------
+    filename : str
+        Path to Tableau file to convert.
+
+    Raises
+    ------
+    OSError
+        If given `filename` is not a valid file.
+        If given `filename` is not a .twb(x) file.
+
+    """
     if not os.path.isfile(filename):
         raise OSError('%s is not a valid file path.' % filename)
 
@@ -43,18 +69,43 @@ def _validate_file(filename):
 
 
 def _parse_twbx(filename):
-    """Parse twbx zip & return twb XML."""
+    """Parse twbx zip & return twb XML.
+
+    Parameters
+    ----------
+    filename : str
+        Path to Tableau file to convert.
+
+    Returns
+    -------
+    xml : object <ElementTree>
+        Root ET object from initial Tableau file.
+
+    """
     with open(filename, 'rb') as infile:
         twbx = zipfile.ZipFile(infile)
 
         for item in twbx.namelist():
             if item.endswith('.twb'):
                 twb = twbx.open(item)
-                return ET.parse(twb).getroot()
+                xml = ET.parse(twb).getroot()
+                return xml
 
 
 def parse_worksheets(worksheets):
-    """Parse worksheet xml objects & return cleaned values."""
+    """Parse worksheet xml objects & return cleaned values.
+
+    Parameters
+    ----------
+    worksheets : array-like <list>
+        List of worksheet XML objects to parse.
+
+    Returns
+    -------
+    results : array-like <OrderedDict>
+        Dictionary of datasources from worksheets.
+
+    """
     results = OrderedDict()
 
     for worksheet in worksheets:
@@ -67,7 +118,19 @@ def parse_worksheets(worksheets):
 
 
 def parse_datasources(datasources):
-    """Parse connection xml objects & return cleaned values."""
+    """Parse connection xml objects & return cleaned values.
+
+    Parameters
+    ----------
+    datasource : array-like <dict>
+        Dictionary of datasources from worksheets.
+
+    Returns
+    -------
+    results : array-like <OrderedDict>
+        Dictionary of connection details for datasources.
+
+    """
     results = OrderedDict()
     datasources = [i for i in datasources if 'caption' in i.attrib]
 
@@ -87,7 +150,19 @@ def parse_datasources(datasources):
 
 
 def parse_queries(datasources):
-    """Parse query&table xml objects & return cleaned values."""
+    """Parse query&table xml objects & return cleaned values.
+
+    Parameters
+    ----------
+    datasource : array-like <dict>
+        Dictionary of datasources from worksheets.
+
+    Returns
+    -------
+    results : array-like <OrderedDict>
+        Dictionary of queries from datasources.
+
+    """
     results = OrderedDict()
     datasources = [i for i in datasources if 'caption' in i.attrib]
 
@@ -106,7 +181,19 @@ def parse_queries(datasources):
 
 
 def format_header(filename):
-    """Format header object for outfile."""
+    """Format header object for outfile.
+
+    Parameters
+    ----------
+    worksheets : array-like <list>
+        List of worksheet XML objects to parse.
+
+    Returns
+    -------
+    output : str
+        Formatted header metadata for outfile.
+
+    """
     filename = os.path.abspath(filename)
     username = getpass.getuser()
     today = datetime.now().strftime('%Y-%m-%d %I:%M%p')
@@ -121,7 +208,19 @@ def format_header(filename):
 
 
 def format_worksheets(worksheets):
-    """Format worksheets object for outfile."""
+    """Format worksheets object for outfile.
+
+    Parameters
+    ----------
+    worksheets : array-like <list>
+        List of worksheet XML objects to parse.
+
+    Returns
+    -------
+    output : str
+        Formatted worksheet details for outfile.
+
+    """
     output = '-- Worksheets w/ Datasources %s\n' % ('-'*(LINE_BIG-29))
 
     for worksheet in worksheets:
@@ -137,7 +236,19 @@ def format_worksheets(worksheets):
 
 
 def format_datasources(datasources):
-    """Format datasources object for outfile."""
+    """Format datasources object for outfile.
+
+    Parameters
+    ----------
+    datasource : array-like <dict>
+        Dictionary of datasources from worksheets.
+
+    Returns
+    -------
+    output : str
+        Formatted datasource details for outfile.
+
+    """
     output = '-- Datasources & Connections %s\n' % ('-'*(LINE_BIG-29))
 
     for source in datasources:
@@ -152,7 +263,19 @@ def format_datasources(datasources):
 
 
 def format_queries(queries):
-    """Format datasources object for outfile."""
+    """Format datasources object for outfile.
+
+    Parameters
+    ----------
+    queries : array-like <dict>
+        Dictionary of queries from worksheets.
+
+    Returns
+    -------
+    output : str
+        Formatted query details for outfile.
+
+    """
     output = '-- Queries %s\n' % ('-'*(LINE_BIG-11))
 
     for query in queries:
@@ -164,7 +287,19 @@ def format_queries(queries):
 
 
 def convert(filename):
-    """Process tableau to sql conversion."""
+    """Process tableau to sql conversion.
+
+    Parameters
+    ----------
+    filename : str
+        Path to Tableau file to convert.
+
+    Returns
+    -------
+    output : str
+        Fully formatted output from initial Tableau file.
+
+    """
     twb = return_xml(filename)
 
     worksheets = parse_worksheets(twb.find('worksheets'))
