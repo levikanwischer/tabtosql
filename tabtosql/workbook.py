@@ -95,6 +95,8 @@ def parse_queries(datasources):
 
         name = datasource.attrib['caption']
         conn = datasource.find('connection/relation')
+        if not conn:
+            continue
         query = conn.text if conn.text else '-- LINKED TO: %s' % conn.attrib['table']
 
         query = query.replace('<<', '<').replace('>>', '>')
